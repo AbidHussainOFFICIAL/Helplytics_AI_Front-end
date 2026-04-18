@@ -1,4 +1,5 @@
 const Request = require('../models/Request');
+const User = require('../models/User');
 
 // @desc Create request
 exports.createRequest = async (req, res, next) => {
@@ -121,9 +122,112 @@ exports.markCompleted = async (req, res, next) => {
 
     await request.save();
 
+    // increase trust score of helpers
+await User.updateMany(
+  { _id: { $in: request.helpers } },
+  { $inc: { trustScore: 5, contributions: 1 } }
+);
+
     res.status(200).json({
       success: true,
       message: 'Request marked as completed',
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc Get single request
+exports.getRequestById = async (req, res, next) => {
+  try {
+    const request = await Request.findById(req.params.id)
+      .populate('createdBy', 'name role')
+      .populate('helpers', 'name role');
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: 'Request not found',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      request,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc Update request
+exports.updateRequest = async (req, res, next) => {
+  try {
+    const request = await Request.findById(req.params.id);
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: 'Request not found',
+      });
+    }
+
+    // only creator
+    if (request.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to update this request',
+      });
+    }
+
+    // cannot update completed
+    if (request.status === 'completed') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot update completed request',
+      });
+    }
+
+    const updated = await Request.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      request: updated,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+// @desc Delete request
+exports.deleteRequest = async (req, res, next) => {
+  try {
+    const request = await Request.findById(req.params.id);
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: 'Request not found',
+      });
+    }
+
+    if (request.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to delete this request',
+      });
+    }
+
+    await request.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      message: 'Request deleted successfully',
     });
   } catch (err) {
     next(err);

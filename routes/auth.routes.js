@@ -4,13 +4,10 @@ const router = express.Router();
 const {
   signup,
   login,
-  getMe,
   logout,
-  updatePassword,
   forgotPassword, 
   sendOTP,
   verifyOTP,
-  updateProfile,
 } = require('../controllers/auth.controller');
 
 // Import middlewares
@@ -46,10 +43,6 @@ router.post('/verify-otp', authLimiter, validate(verifyOTPSchema), verifyOTP);
 router.post('/forgot-password', authLimiter, validate(emailSchema), forgotPassword);
 
 // Protected Routes (require authentication)
-router.get('/me', protect, getMe);
 router.post('/logout', logout);
-router.put('/updatepassword', protect, validate(passwordChangeSchema), updatePassword);
-
-router.put('/update-profile', protect, updateProfile);
 
 module.exports = router;

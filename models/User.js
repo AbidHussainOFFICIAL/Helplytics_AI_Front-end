@@ -49,6 +49,17 @@ const UserSchema = new mongoose.Schema({
   }
 ],
 
+contributions: {
+  type: Number,
+  default: 0,
+},
+
+badges: [
+  {
+    type: String,
+  }
+],
+
 interests: [String],
 
 location: {

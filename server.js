@@ -54,6 +54,11 @@ app.get('/', (req, res) => {
 // Auth routes
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/requests', require('./routes/request.routes'));
+app.use('/api/account', require('./routes/user.account.routes'));
+app.use('/api/users', require('./routes/user.routes'));
+app.use('/api/chat', require('./routes/chat.routes'));
+app.use('/api/leaderboard', require('./routes/leaderboard.routes'));
+app.use('/api/ai', require('./routes/ai.routes'));
 
 // Example: Protected route
 const { protect } = require('./middlewares/auth.middleware');

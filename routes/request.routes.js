@@ -6,6 +6,9 @@ const {
   getRequests,
   canHelp,
   markCompleted,
+  getRequestById,
+  updateRequest,
+  deleteRequest,
 } = require('../controllers/request.controller');
 
 const { protect } = require('../middlewares/auth.middleware');
@@ -17,7 +20,15 @@ const { createRequestSchema } = require('../validators/request.validator');
 router.post('/', protect, validate(createRequestSchema), createRequest);
 
 // View & filter requests
+// Read
 router.get('/', protect, getRequests);
+router.get('/:id', protect, getRequestById);
+
+// Update
+router.put('/:id', protect, validate(createRequestSchema), updateRequest);
+
+// Delete
+router.delete('/:id', protect, deleteRequest);
 
 // I can help
 router.post('/:id/help', protect, canHelp);
