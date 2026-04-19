@@ -103,6 +103,37 @@ exports.canHelp = async (req, res, next) => {
 
     await request.save();
 
+    // Create Chat and Send Initial Message if provided
+    const { message: initialMessage } = req.body;
+    if (initialMessage) {
+      try {
+        const Chat = require('../models/Chat');
+        const Message = require('../models/Message');
+        
+        let chat = await Chat.findOne({ request: request._id });
+        if (!chat) {
+          chat = await Chat.create({
+            request: request._id,
+            participants: [request.createdBy, req.user._id],
+          });
+        } else {
+          // Add helper to participants if not already there
+          if (!chat.participants.includes(req.user._id)) {
+            chat.participants.push(req.user._id);
+            await chat.save();
+          }
+        }
+
+        await Message.create({
+          chat: chat._id,
+          sender: req.user._id,
+          text: initialMessage,
+        });
+      } catch (chatErr) {
+        console.error("Failed to initiate chat in canHelp", chatErr);
+      }
+    }
+
     // Create Notification for the requester
     try {
       const Notification = require('../models/Notification');

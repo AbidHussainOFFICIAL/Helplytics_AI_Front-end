@@ -5,6 +5,7 @@ const {
   getLeaderboard,
   getTopHelpers,
   getUserRank,
+  getStats,
 } = require('../controllers/leaderboard.controller');
 
 const { protect } = require('../middlewares/auth.middleware');
@@ -14,6 +15,9 @@ router.get('/', protect, getLeaderboard);
 
 // top helpers
 router.get('/helpers', protect, getTopHelpers);
+
+// stats
+router.get('/stats', protect, getStats);
 
 // user rank
 router.get('/:userId', protect, getUserRank);

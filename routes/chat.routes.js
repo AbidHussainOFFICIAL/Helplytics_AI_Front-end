@@ -5,6 +5,7 @@ const {
   createOrGetChat,
   sendMessage,
   getMessages,
+  getUserChats,
 } = require('../controllers/chat.controller');
 
 const { protect } = require('../middlewares/auth.middleware');
@@ -20,5 +21,8 @@ router.post('/:chatId/message', protect, validate(sendMessageSchema), sendMessag
 
 // Get messages
 router.get('/:chatId/messages', protect, getMessages);
+
+// Get all user chats
+router.get('/', protect, getUserChats);
 
 module.exports = router;

@@ -102,3 +102,22 @@ exports.getMessages = async (req, res, next) => {
     next(err);
   }
 };
+
+// Get user chats
+exports.getUserChats = async (req, res, next) => {
+  try {
+    const chats = await Chat.find({
+      participants: req.user._id,
+    })
+      .populate('request', 'title category status')
+      .populate('participants', 'name role')
+      .sort('-updatedAt');
+
+    res.status(200).json({
+      success: true,
+      chats,
+    });
+  } catch (err) {
+    next(err);
+  }
+};

@@ -52,8 +52,13 @@ app.use(cors({
   credentials: true, // Allow cookies
 }));
 
-// Rate limiting (apply to all routes)
-app.use(apiLimiter);
+// Rate limiting (apply to all routes except AI)
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/ai')) {
+    return next();
+  }
+  apiLimiter(req, res, next);
+});
 
 // 3. ROUTES
 // ===========================

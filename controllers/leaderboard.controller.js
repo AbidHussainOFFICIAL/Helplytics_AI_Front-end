@@ -51,9 +51,34 @@ exports.getTopHelpers = async (req, res, next) => {
       success: true,
       helpers: result.map((h, i) => ({
         rank: i + 1,
-        user: h._id,
         helpCount: h.helpCount,
+        ...(h._id.toObject ? h._id.toObject() : h._id),
       })),
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc Get community stats
+// @route GET /api/leaderboard/stats
+exports.getStats = async (req, res, next) => {
+  try {
+    const totalRequests = await Request.countDocuments();
+    const totalSolutions = await Request.countDocuments({ status: 'completed' });
+    const masterHelpers = await User.countDocuments({ trustScore: { $gt: 90 } });
+    
+    const successRate = totalRequests > 0 
+      ? ((totalSolutions / totalRequests) * 100).toFixed(1) 
+      : 0;
+
+    res.status(200).json({
+      success: true,
+      stats: {
+        totalSolutions,
+        successRate,
+        masterHelpers,
+      }
     });
   } catch (err) {
     next(err);

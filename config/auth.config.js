@@ -21,8 +21,8 @@ module.exports = {
 
   // Rate Limiting Configuration
   rateLimit: {
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 2000, // limit each IP
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 10 * 60 * 1000, // 10 minutes
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 5000, // limit each IP
     message: 'Too many requests from this IP, please try again later.',
   },
 
