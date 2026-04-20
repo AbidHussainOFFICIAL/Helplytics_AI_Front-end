@@ -83,7 +83,7 @@ exports.askAI = async (prompt, options = {}) => {
 
   // Check if any providers are configured
   if (availableProviders.length === 0) {
-    throw new AIServiceError('No AI providers configured. Please set API keys.', 503);
+    throw new AIServiceError('AI service is not configured. Please contact support or try again later.', 503);
   }
 
   for (const provider of availableProviders) {
