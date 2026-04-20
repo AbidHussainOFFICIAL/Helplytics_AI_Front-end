@@ -83,7 +83,7 @@ app.use('/api/account', require('./routes/user.account.routes'));
 app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/chat', require('./routes/chat.routes'));
 app.use('/api/leaderboard', require('./routes/leaderboard.routes'));
-app.use('/api/ai', require('./routes/ai.routes'));
+// app.use('/api/ai', require('./routes/ai.routes')); // AI routes removed
 app.use('/api/notifications', require('./routes/notification.routes'));
 
 // Example: Protected route
