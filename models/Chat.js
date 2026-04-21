@@ -5,7 +5,7 @@ const ChatSchema = new mongoose.Schema(
     request: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Request',
-      required: true,
+      required: false,
     },
 
     participants: [

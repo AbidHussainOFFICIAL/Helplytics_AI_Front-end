@@ -140,3 +140,138 @@ exports.getUserChats = async (req, res, next) => {
     next(err);
   }
 };
+
+// Get users that the current user has chatted with
+exports.getChatUsers = async (req, res, next) => {
+  try {
+    // Find all chats where the user is a participant
+    const chats = await Chat.find({
+      participants: req.user._id,
+    }).populate('participants', 'name email role');
+
+    // Extract unique users from chats
+    const userMap = new Map();
+
+    chats.forEach(chat => {
+      chat.participants.forEach(participant => {
+        if (participant._id.toString() !== req.user._id.toString()) {
+          // Find the most recent message in this chat
+          const chatId = chat._id;
+          // We'll get the last message separately
+          userMap.set(participant._id.toString(), {
+            _id: participant._id,
+            name: participant.name,
+            email: participant.email,
+            role: participant.role,
+            chatId: chatId,
+            // lastMessage will be set below
+          });
+        }
+      });
+    });
+
+    // Get the most recent message for each user
+    const userIds = Array.from(userMap.keys());
+    if (userIds.length > 0) {
+      for (const userId of userIds) {
+        const lastMessage = await Message.findOne({
+          chat: { $in: chats.map(c => c._id) },
+          $or: [
+            { sender: req.user._id },
+            { sender: userId }
+          ]
+        }).sort('-createdAt').populate('sender', 'name');
+
+        if (lastMessage) {
+          userMap.get(userId).lastMessage = lastMessage.createdAt;
+          userMap.get(userId).lastMessageText = lastMessage.text;
+        }
+      }
+    }
+
+    const users = Array.from(userMap.values())
+      .filter(user => user.lastMessage) // Only include users with messages
+      .sort((a, b) => new Date(b.lastMessage) - new Date(a.lastMessage));
+
+    res.status(200).json({
+      success: true,
+      users,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Get all messages between current user and a specific user
+exports.getMessagesWithUser = async (req, res, next) => {
+  try {
+    const targetUserId = req.params.userId;
+
+    // Find all chats where both users are participants
+    const chats = await Chat.find({
+      participants: { $all: [req.user._id, targetUserId] }
+    });
+
+    if (chats.length === 0) {
+      return res.status(200).json({
+        success: true,
+        messages: [],
+        user: null
+      });
+    }
+
+    // Get all messages from these chats
+    const messages = await Message.find({
+      chat: { $in: chats.map(chat => chat._id) }
+    })
+    .populate('sender', 'name email role')
+    .sort('createdAt');
+
+    // Get target user info
+    const User = require('../models/User');
+    const targetUser = await User.findById(targetUserId).select('name email role');
+
+    res.status(200).json({
+      success: true,
+      messages,
+      user: targetUser
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Send message to a specific user (create chat if doesn't exist)
+exports.sendMessageToUser = async (req, res, next) => {
+  try {
+    const { text } = req.body;
+    const targetUserId = req.params.userId;
+
+    // Find existing chat between the two users
+    let chat = await Chat.findOne({
+      participants: { $all: [req.user._id, targetUserId], $size: 2 }
+    });
+
+    // If no direct chat exists, create one
+    if (!chat) {
+      chat = await Chat.create({
+        participants: [req.user._id, targetUserId],
+        // No request associated for direct user-to-user messaging
+      });
+    }
+
+    // Create the message
+    const message = await Message.create({
+      chat: chat._id,
+      sender: req.user._id,
+      text
+    });
+
+    res.status(200).json({
+      success: true,
+      message: await message.populate('sender', 'name email role')
+    });
+  } catch (err) {
+    next(err);
+  }
+};
